@@ -272,5 +272,8 @@ TSWLatexianTemp*
 # standalone packages
 *.sta
 
+# jupyter notebook
+.ipynb_checkpoints
+
 # Makeindex log files
 *.lpz
