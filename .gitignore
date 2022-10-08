@@ -275,5 +275,9 @@ TSWLatexianTemp*
 # jupyter notebook
 .ipynb_checkpoints
 
+# data file fold
+!ml-1m/
+ml-lm/*
+
 # Makeindex log files
 *.lpz
