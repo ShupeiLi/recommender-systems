@@ -17,28 +17,30 @@
 \usepackage{xcolor}
 \usepackage{xurl}
 \usepackage{tikz}
+\usepackage{lastpage}
 
 \pagestyle{fancy}
+\geometry{a4paper, left = 3cm, right = 3cm, top = 2cm, bottom = 2cm, includehead}
 
-\fancyhead[R]{\thepage}
-\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage / \pageref{LastPage}}
+\fancyhead[L]{GROUP 28}
 \fancyfoot{}
 \fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
 
 \begin{document}
-% cover
-\thispagestyle{empty}
+\noindent\rule{\textwidth}{1pt}
 \begin{center}
-\Huge    Cover
+    \LARGE \textbf{Assignment 1: Recommender Systems}
 \end{center}
-
-% contents
-\newpage
-\thispagestyle{empty}
-\tableofcontents
-
-% Text
-\newpage
+\noindent\rule{\textwidth}{0.5pt}
+\begin{center}
+    \textbf{Group 28}\par
+    \vspace{0.3cm}
+Shuang Fan\phantom{space}Kaiteng Jiang\phantom{space}Shupei Li\\
+sxxxxxxx\phantom{spacespac}sxxxxxxx\phantom{spacespa}s3430863
+\end{center}
 \section{Recommender systems}
 \subsection{Naive Approaches}
 
