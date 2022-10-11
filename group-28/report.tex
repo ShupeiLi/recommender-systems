@@ -18,16 +18,24 @@
 \usepackage{xurl}
 \usepackage{tikz}
 \usepackage{lastpage}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{caption}
+\usepackage{threeparttable}
+
+\geometry{a4paper, left = 1.6cm, right = 1.6cm, top = 2cm, bottom = 2cm, includehead}
+\captionsetup[table]{font={small}}
 
 \pagestyle{fancy}
-\geometry{a4paper, left = 3cm, right = 3cm, top = 2cm, bottom = 2cm, includehead}
-
-\fancyhead[R]{\thepage / \pageref{LastPage}}
+\fancyhead[R]{\thepage /\pageref{LastPage}}
 \fancyhead[L]{GROUP 28}
 \fancyfoot{}
 \fancyfoot{}
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{14.49998pt}
+\addtolength{\topmargin}{-2.49998pt}
 
 \begin{document}
 \noindent\rule{\textwidth}{1pt}
@@ -47,7 +55,103 @@ sxxxxxxx\phantom{spacespac}sxxxxxxx\phantom{spacespa}s3430863
 \subsection{UV Matrix Decomposition}
 
 \subsection{Matrix Factorization}
+\subsubsection{Experimental Set-up}
+Matrix factorization algorithm in \texttt{gravity-Tikk.pdf} consists of three stages --- initialization, gradient descent, and evaluation. In the experiments, we initialize feature matrices $\mathbf{U}_{I\times K}$ and $\mathbf{M}_{K\times J}$ from a Gaussian distribution $N\sim (0, 0.1)$, where $I$, $J$, and $K$ are maximal UserID, maximal MovieID, and the number of features respectively. \texttt{gravity-Tikk.pdf} combines gradient descent and regularization strategies. Main update formulas are,
+\begin{align*}
+    u_{ik}^{(t+1)} &= u_{ik}^{(t)} + \eta\cdot\left( 2e_{ij}\cdot m_{kj}^{(t)} - \lambda\cdot u_{ik}^{(t)} \right) \\
+    m_{kj}^{(t+1)} &= m_{kj}^{(t)} + \eta\cdot\left( 2e_{ij}\cdot u_{ik}^{(t)} - \lambda \cdot m_{kj}^{(t)} \right) 
+\end{align*}
+where $\eta$, $\lambda$ are hyperparameters, and $t$ represents the $t$ th iteration. To enhance the efficiency of program, we update the weights based on the rows or columns of matrices, that is,
+\begin{align*}
+    U^{(t+1)}[i, :] &= U^{(t)}[i, :] + \eta\left( 2e_{ij}M^{(t)}[:, j] - \lambda U^{(t)}[i, :] \right) \\
+    M^{(t+1)}[:, j] &= M^{(t)}[:, j] + \eta\left( 2e_{ij}U^{(t)}[i, :] - \lambda M^{(t)}[:, j] \right) 
+\end{align*}
+Termination condition is achieving the maximum iteration specified by user. In the evaluation stage, RMSE and MAE are chosen as metrics. Because $U$ and $M$ are real value matrices, the predicted value is a real number that may exceed the valid range of rating. To fix this problem, we truncate the predicted value according to the function,
+\begin{align*}
+    f(\hat{x}) &= 
+    \begin{cases}
+        1,\qquad &\hat{x} < 1,\\
+        \hat{x},\qquad &1\leq \hat{x} \leq 5,\\
+        5, \qquad &\hat{x} > 5.
+    \end{cases}
+\end{align*}
+\par
+We try five different sets of hyperparameters to improve the model performance. Table \ref{tab:1.3-hyper} summarizes all hyperparameters in matrix factorization algorithms. It is worth noting that we set the random seed to 1 both in weights initialization and five-fold division, which ensures reproducibility. All experiments of Task 1.3 are run on a multi-core CPU Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz. We adopt multiprocessing programming to speed up the program.
+\begin{table}[ht]
+    \centering
+    \caption{Hyperparameters in Matrix Factorization}
+    \label{tab:1.3-hyper}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Hyperparameter} & \textbf{Meaning}\\
+        \midrule
+        seeds & The random seed. Default: 1.\\
+        num\_factors ($K$) & The number of features.\\
+        num\_iter ($N$) & The maximum iteration.\\
+        regularization ($\lambda$) & Regularization rate.\\
+        learn\_rate ($\eta$) & Learning rate.\\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
+\subsubsection{Results}
+Table \ref{tab:1.3-results} reports RMSE, MAE, and the actual run time of matrix factorization algorithm on MovieLens 1M data, with different hyperparameter settings. RMSE and MAE are the mean values of five folds.
+\begin{table}[ht]
+    \centering
+    \caption{Results of Task 1.3}
+    \label{tab:1.3-results}
+    \begin{threeparttable}
+    \begin{tabular}{lllllllll}
+        \toprule
+        \textbf{$K$} & \textbf{$N$} & \textbf{$\lambda$} & \textbf{$\eta$} & \textbf{Train RMSE} & \textbf{Train MAE} & \textbf{Test RMSE} & \textbf{Test MAE} & \textbf{Time}\\
+        \midrule
+        *10 & 75 & 0.05 & 0.005 & 0.7689 & 0.6036 & 0.8686 & 0.6785 & 18m 37s\\
+        20 & 75 & 0.05 & 0.005 & \textbf{0.7003} & \textbf{0.5475} & 0.8848 & 0.6878 & 18m 38s\\
+        10 & 100 & 0.05 & 0.005 & 0.7673 & 0.6020 & 0.8670 & 0.6793 & 24m 38s\\
+        10 & 75 & 0.01 & 0.005 & 0.7627 & 0.5949 & 0.8807 & 0.6829 & 18m 29s\\
+        10 & 75 & 0.05 & 0.001 & 0.7980 & 0.6292 & \textbf{0.8611} & \textbf{0.6763} & 18m 34s\\
+        \bottomrule
+    \end{tabular}
+    \begin{tablenotes}
+        \footnotesize
+        \item[*] This set of hyperparameters is suggested by Task 1.3.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+\par
+According to Table \ref{tab:1.3-results}, the suggested setting is not the optimal choice.
+
+\subsubsection{Algorithm Analysis}
+\noindent\textbf{Notations}\\
+As stated in the question,
+\begin{itemize}
+    \item $M$: The number of movies.
+    \item $U$: The number of users.
+    \item $R$: The number of ratings.
+\end{itemize}
+The number of features $K$ is an integer specified by user. We regard $K$ as a constant in the following analysis.\par
+\vspace{0.3cm}
+\noindent\textbf{Time Complexity}\\
+The time complexity of initializing $U$ and $M$ depends on the implementation of random number generation algorithm. For simplicity, we assume the time complexity of the initialization stage is $O(1)$. According to our Python implementation, the \texttt{for} loop to update weights has the time complexity $O(R)$. In the \texttt{for} loop, calculating error, computing gradients, and updating weights all have the time complexity $O(K) \rightarrow O(1)$. To evaluate the performance, we need to traverse the rating table, which leads to $O(R)$ time complexity. Calculating RMSE and MAE also has time complexity $O(R)$. Therefore, the time complexity of our implementation is $O(R)$.\par 
+\vspace{0.3cm}
+\noindent\textbf{Memory Complexity}\\
+We need to initialize $U$, $M$, and rating table at the beginning of the algorithm. This step requires $O(UK + MK + R)\rightarrow O(U + M + R)$ memory. In the \texttt{for} loop, storing error value and gradients needs $O(1)$ memory. During the evaluation, storing predicted values requires $O(R)$ memory and storing metrics needs $O(1)$ memory. Therefore, the memory complexity of our implementation is $O(U + M + R)$.
+
+\subsection{Comparison of Algorithms}
+Table \ref{tab:1.4} compares the performance of previously mentioned algorithms, which only includes the model with the best performance on test data if multiple hyperparameters have been explored.
+\begin{table}[ht]
+    \centering
+    \caption{Algorithm Comparison}
+    \label{tab:1.4}
+    \begin{tabular}{llllll}
+        \toprule
+        \textbf{Algorithm} & \textbf{Train RMSE} & \textbf{Train MAE} & \textbf{Test RMSE} & \textbf{Test MAE} & \textbf{Time}\\
+        \midrule
+        Matrix Factorization & 0.7980 & 0.6292 & 0.8611 & 0.6763 & 18m 34s\\
+
+        \bottomrule
+    \end{tabular}
+\end{table}
 \section{Data visualization}
 
 \end{document}
