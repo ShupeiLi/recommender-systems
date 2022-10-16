@@ -47,10 +47,56 @@
     \textbf{Group 28}\par
     \vspace{0.3cm}
 Shuang Fan\phantom{space}Kaiteng Jiang\phantom{space}Shupei Li\\
-sxxxxxxx\phantom{spacespac}sxxxxxxx\phantom{spacespa}s3430863
+s3505847\phantom{spacespac}sxxxxxxx\phantom{spacespa}s3430863
 \end{center}
 \section{Recommender systems}
+RMSE and MAE are chosen as metrics in Task 1.1-1.3. The predicted value in all task is a real number that may exceed the valid range of rating. To fix this problem, we truncate the predicted value according to the function,
+\begin{align*}
+    f(\hat{x}) &= 
+    \begin{cases}
+        1,\qquad &\hat{x} < 1,\\
+        \hat{x},\qquad &1\leq \hat{x} \leq 5,\\
+        5, \qquad &\hat{x} > 5.
+    \end{cases}
+\end{align*}
+\par
+It is worth noting that we set the random seed to 1 in all models that involve randomness, e.g. weights initialization, five-fold division, etc. The fixed random state ensures reproducibility.
+
 \subsection{Naive Approaches}
+\subsubsection{Experimental Setup}
+During the sampling process of an "average rating" recommender, some users or some movies might disappear from the training sets. To fix this problem, we need to define a fall-back value. In our experiments, we build models of global average, user average, movies average and a linear combination of user and movie averages (with and without the intercept). A linear regression model can be expressed as,
+\begin{align*}
+    pred&=\alpha\cdot avg_{user} + \beta\cdot avg_{movie} + \gamma
+\end{align*}
+where $\gamma$ is the intercept. After simplifing the variant $\gamma$, we get,
+\begin{align*}
+    pred&=\alpha\cdot avg_{user} + \beta\cdot avg_{movie}
+\end{align*}
+\par
+Considering the matrix $\mathbf{U}$ with UserID and MovieID, the global average should be the average value of all existed Ratings. For user average rating, we calculate every user's average rating. This is the $avg_{user}$ term in the equation. For movie average rating, we calculate every movie's average rating. This is the $avg_{movie}$ term in the equation. When implementing the linear regression algorithm, we calculate the coefficient and consider the situations that are with and without the intercept $\gamma$.\par
+All experiments of Task 1.1 are run on a multi-core CPU Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz.
+\subsubsection{Results}
+Table \ref{tab:1.1-results} reports RMSE, MAE, and the actual run time of global average, user average, movies average and a linear combination of user and movie averages(with and without the intercept). RMSE and MAE are the mean values of five folds.
+\begin{table}[ht]
+    \centering
+    \caption{Results of Task 1.1}
+    \label{tab:1.1-results}
+    \begin{threeparttable}
+    \begin{tabular}{lllllllll}
+        \toprule
+        \textbf{Algorithm}  & \textbf{Train RMSE} & \textbf{Train MAE} & \textbf{Test RMSE} & \textbf{Test MAE} & \textbf{Time}\\
+        \midrule
+        GlobalAvg & 1.1171 & 0.9339 & 1.1171 & 0.9339 & 0.93s\\
+        UserAvg & 1.0277 & 0.8227 & 1.0355 & 0.8290 & 1.38s\\
+        MovieAvg & 0.9742 & 0.7783 & 0.9794 & 0.7823 & 1.43s\\
+        LinearReg & \textbf{0.9145} & \textbf{0.7248} & \textbf{0.9002} & \textbf{0.7122} & 13m 57s\\
+        LinearRegNI & 0.9465 & 0.7586 & 0.9345 & 0.7487 & 13m 45s\\
+        \bottomrule
+    \end{tabular}
+    \end{threeparttable}
+\end{table}
+
+\subsubsection{Algorithm Analysis}
 
 \subsection{UV Matrix Decomposition}
 
@@ -66,17 +112,8 @@ where $\eta$, $\lambda$ are hyperparameters, and $t$ represents the $t$ th itera
     U^{(t+1)}[i, :] &= U^{(t)}[i, :] + \eta\left( 2e_{ij}M^{(t)}[:, j] - \lambda U^{(t)}[i, :] \right) \\
     M^{(t+1)}[:, j] &= M^{(t)}[:, j] + \eta\left( 2e_{ij}U^{(t)}[i, :] - \lambda M^{(t)}[:, j] \right) 
 \end{align*}
-Termination condition is achieving the maximum iteration specified by user. In the evaluation stage, RMSE and MAE are chosen as metrics. Because $U$ and $M$ are real value matrices, the predicted value is a real number that may exceed the valid range of rating. To fix this problem, we truncate the predicted value according to the function,
-\begin{align*}
-    f(\hat{x}) &= 
-    \begin{cases}
-        1,\qquad &\hat{x} < 1,\\
-        \hat{x},\qquad &1\leq \hat{x} \leq 5,\\
-        5, \qquad &\hat{x} > 5.
-    \end{cases}
-\end{align*}
-\par
-We try five different sets of hyperparameters to improve the model performance. Table \ref{tab:1.3-hyper} summarizes all hyperparameters in matrix factorization algorithms. It is worth noting that we set the random seed to 1 both in weights initialization and five-fold division, which ensures reproducibility. All experiments of Task 1.3 are run on a multi-core CPU Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz. We adopt multiprocessing programming to speed up the program.
+Termination condition is achieving the maximum iteration specified by user.\par
+We try five different sets of hyperparameters to improve the model performance. Table \ref{tab:1.3-hyper} summarizes all hyperparameters in matrix factorization algorithms. All experiments of Task 1.3 are run on a multi-core CPU Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz. We adopt multiprocessing programming to speed up the program.
 \begin{table}[ht]
     \centering
     \caption{Hyperparameters in Matrix Factorization}
@@ -147,8 +184,12 @@ Table \ref{tab:1.4} compares the performance of previously mentioned algorithms,
         \toprule
         \textbf{Algorithm} & \textbf{Train RMSE} & \textbf{Train MAE} & \textbf{Test RMSE} & \textbf{Test MAE} & \textbf{Time}\\
         \midrule
+        GlobalAvg & 1.1171 & 0.9339 & 1.1171 & 0.9339 & 0.93s\\
+        UserAvg & 1.0277 & 0.8227 & 1.0355 & 0.8290 & 1.38s\\
+        MovieAvg & 0.9742 & 0.7783 & 0.9794 & 0.7823 & 1.43s\\
+        LinearReg & 0.9145 & 0.7248 & 0.9002 & 0.7122 & 13m 57s\\
+        LinearRegNI & 0.9465 & 0.7586 & 0.9345 & 0.7487 & 13m 45s\\
         Matrix Factorization & 0.7980 & 0.6292 & 0.8611 & 0.6763 & 18m 34s\\
-
         \bottomrule
     \end{tabular}
 \end{table}
