@@ -47,7 +47,7 @@
     \textbf{Group 28}\par
     \vspace{0.3cm}
 Shuang Fan\phantom{space}Kaiteng Jiang\phantom{space}Shupei Li\\
-s3505847\phantom{spacespac}sxxxxxxx\phantom{spacespa}s3430863
+s3505847\phantom{spacespac}s3479420\phantom{spacespa}s3430863
 \end{center}
 \section{Recommender systems}
 RMSE and MAE are chosen as metrics in Task 1.1-1.3. The predicted value in all task is a real number that may exceed the valid range of rating. To fix this problem, we truncate the predicted value according to the function,
@@ -64,13 +64,13 @@ It is worth noting that we set the random seed to 1 in all models that involve r
 
 \subsection{Naive Approaches}
 \subsubsection{Experimental Setup}
-During the sampling process of an "average rating" recommender, some users or some movies might disappear from the training sets. To fix this problem, we need to define a fall-back value. In our experiments, we build models of global average, user average, movies average and a linear combination of user and movie averages (with and without the intercept). A linear regression model can be expressed as,
+During the sampling process of an "average rating" recommender, some users or some movies might disappear from the training sets. To fix this problem, we need to define a fall-back value. In our experiments, we build models of global average, user average, movie average and a linear combination of user and movie averages (with and without the intercept). A linear regression model can be expressed as,
 \begin{align*}
-    pred&=\alpha\cdot avg_{user} + \beta\cdot avg_{movie} + \gamma
+    pred&=\alpha\cdot avg_{user} + \beta\cdot avg_{movie} + \gamma,
 \end{align*}
 where $\gamma$ is the intercept. After simplifing the variant $\gamma$, we get,
 \begin{align*}
-    pred&=\alpha\cdot avg_{user} + \beta\cdot avg_{movie}
+    pred&=\alpha\cdot avg_{user} + \beta\cdot avg_{movie}.
 \end{align*}
 \par
 Considering the matrix $\mathbf{U}$ with UserID and MovieID, the global average should be the average value of all existed Ratings. For user average rating, we calculate every user's average rating. This is the $avg_{user}$ term in the equation. For movie average rating, we calculate every movie's average rating. This is the $avg_{movie}$ term in the equation. When implementing the linear regression algorithm, we calculate the coefficient and consider the situations that are with and without the intercept $\gamma$.\par
@@ -99,6 +99,71 @@ Table \ref{tab:1.1-results} reports RMSE, MAE, and the actual run time of global
 \subsubsection{Algorithm Analysis}
 
 \subsection{UV Matrix Decomposition}
+\subsubsection{Experimental Set-up}
+The UV matrix decomposition is an element-wise update algorithm of the feature matrices $U_{m\times k}$ and $V_{k\times n}$, of which the multiplication $UV$ approximates the utility matrix $M_{m\times n}$. The goal of update is to minimize the mean square error (MSE) function. For an element $u_{rs}$ of the matrix $U$, the optimization problem can be written as,
+\[
+u_{rs} = \min_{x} \sum_{j, m_{rj}\neq 0}\left[ m_{rj}-\left( \sum_{k\neq s}u_{rk}v_{kj} + xv_{sj} \right) \right]^2.
+\]
+And for $v_{rs}$,
+\[
+v_{rs} = \min_{y} \sum_{i, m_{is}\neq 0}\left[ m_{is}-\left( \sum_{k\neq r}u_{ik}v_{ks} + u_{ir}y \right) \right]^2.
+\]
+
+They both have closed-form solutions,
+\begin{align*}
+x &= \frac{\sum\limits_{j, m_{rj}\neq 0}v_{sj}\left(m_{rj}-\sum\limits_{k\neq s }u_{rk}v_{kj}\right)}
+{\sum\limits_{j, m_{rj}\neq 0}v_{sj}^2},\\
+y &= \frac{\sum\limits_{i, m_{is}\neq 0}u_{ir}\left(m_{is}-\sum\limits_{k\neq s }u_{ik}v_{ks}\right)}
+{\sum\limits_{i, m_{is}\neq 0}u_{ir}^2}. 
+\end{align*}
+
+In the experiment, we visit every element of both $U$ and $V$ in a random order per epoch. And predicted values are clipped to the range of $[1,5]$, as mentioned at the beginning of the section. Table \ref{tab:1.2-hyper} explains the hyperparameters in the algorithm.
+\begin{table}[ht]
+    \centering
+    \caption{Hyperparameters in UV Matrix Factorization}
+    \label{tab:1.2-hyper}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Hyperparameter} & \textbf{Meaning}\\
+        \midrule
+        seeds & The random seed. Default: 1.\\
+        num\_factors ($K$) & The number of features.\\
+        num\_iter ($N$) & The maximum iteration.\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Results}
+Table \ref{tab:1.2-re} reports the results of the task.
+\begin{table}[ht]
+    \centering
+    \caption{Results of Task 1.2}
+    \label{tab:1.2-re}
+    \begin{tabular}{lllllll}
+        \toprule
+        \textbf{$K$} & \textbf{$N$} & \textbf{Train RMSE} & \textbf{Train MAE} & \textbf{Test RMSE} & \textbf{Test MAE} & \textbf{Time}\\
+        \midrule
+        5 & 30 & 0.8270 & 0.6486 & 0.8979 & 0.7005 & 72m 25s\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Algorithm Analysis}
+\noindent\textbf{Notations}\\
+As stated in the question,
+\begin{itemize}
+    \item $M$: The number of movies.
+    \item $U$: The number of users.
+    \item $R$: The number of ratings.
+\end{itemize}
+The number of features $K$ is an integer specified by user. We regard $K$ as a constant in the following analysis.\par
+\vspace{0.3cm}
+\noindent\textbf{Time Complexity}\\
+Computing the sum $\sum_{k}$ needs time $O(K)$, and $\sum_j$ needs $O(M)$. Thus, a single update of an element of $U$ costs $O(MK)$. Similarly, updating an element of $V$ needs $O(UK)$. Since there are $UK$ and $KM$ elements in $U$ and $V$ respectively, an epoch which updates all the elements of $U$ and $V$ has a time complexity of $O(UK\cdot MK+KM\cdot UK)=O(MUK^2)\rightarrow O(MU)$. This is a very costly and slow algorithm, which explains the long running time in the experiment result. In fact, we have tried to set the dimension $K$ to larger numbers, like 10, and it took many hours to run a single experiment, which became unacceptable.
+
+\vspace{0.3cm}
+\noindent\textbf{Memory Complexity}\\
+We only need to initialize, store and update three matrices: $U$, $V$ and $M$, thus the memory complexity is $O(UK+MK+R)\rightarrow O(U+M+R)$.
 
 \subsection{Matrix Factorization}
 \subsubsection{Experimental Set-up}
@@ -189,10 +254,14 @@ Table \ref{tab:1.4} compares the performance of previously mentioned algorithms,
         MovieAvg & 0.9742 & 0.7783 & 0.9794 & 0.7823 & 1.43s\\
         LinearReg & 0.9145 & 0.7248 & 0.9002 & 0.7122 & 13m 57s\\
         LinearRegNI & 0.9465 & 0.7586 & 0.9345 & 0.7487 & 13m 45s\\
-        Matrix Factorization & 0.7980 & 0.6292 & 0.8611 & 0.6763 & 18m 34s\\
+        UV Decomposition & 0.8270 & 0.6486 & 0.8979 & 0.7005 & 72m 25s\\
+        Matrix Factorization & \textbf{0.7980} & \textbf{0.6292} & \textbf{0.8611} & \textbf{0.6763} & 18m 34s\\
         \bottomrule
     \end{tabular}
 \end{table}
+\par
+According to Table \ref{tab:1.4}, Matrix Factorization algorithm outperforms all the other algorithms both on training set and test set, while its real run time is acceptable.
+
 \section{Data visualization}
 
 \end{document}
