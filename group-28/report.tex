@@ -97,6 +97,23 @@ Table \ref{tab:1.1-results} reports RMSE, MAE, and the actual run time of global
 \end{table}
 
 \subsubsection{Algorithm Analysis}
+\noindent\textbf{Notations}\\
+As stated in the question,
+\begin{itemize}
+    \item $M$: The number of movies.
+    \item $U$: The number of users.
+    \item $R$: The number of ratings.
+\end{itemize}
+
+\vspace{0.3cm}
+\noindent\textbf{Time Complexity}\\
+The code in the \texttt{for} loop is executed n times. Therefore, its run time is proportional to $n$, which means its time complexity is $O(n)$.
+We need to fill a $M \times U$ matrix with the generated ratings, which is a matrix with movies and users.
+To solve this, we need a $O(MU)$ time complexity.
+ Calculating RMSE and MAE also has time complexity $O(MU)$. Therefore, the time complexity of our implementation is $O(MU)$.\par
+\vspace{0.3cm}
+\noindent\textbf{Memory Complexity}\\
+In the \texttt{for} loop, storing error value and the RMSE and AME needs $O(1)$ memory. During the $global\_average$,$user\_average$, $movie\_average$, $linear\ regression\ with\ and\ without\ intercept$, the memory complexity of our implementation is $O(MU)$.
 
 \subsection{UV Matrix Decomposition}
 \subsubsection{Experimental Set-up}
