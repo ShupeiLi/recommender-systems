@@ -60,7 +60,15 @@ RMSE and MAE are chosen as metrics in Task 1.1-1.3. The predicted value in all t
     \end{cases}
 \end{align*}
 \par
-It is worth noting that we set the random seed to 1 in all models that involve randomness, e.g. weights initialization, five-fold division, etc. The fixed random state ensures reproducibility.
+It is worth noting that we set the random seed to 1 in all models that involve randomness, e.g. weights initialization, five-fold division, etc. The fixed random state ensures reproducibility.\par
+When analyzing the complexity of the algorithm, we use the following notations.
+\begin{itemize}
+    \item $M$: The number of movies.
+    \item $U$: The number of users.
+    \item $R$: The number of ratings.
+    \item $K$: The number of features.
+\end{itemize}
+In Task 1.2 and 1.3, the number of features $K$ is an integer specified by user. We regard $K$ as a constant in the algorithm analysis.\par
 
 \subsection{Naive Approaches}
 \subsubsection{Experimental Setup}
@@ -97,23 +105,34 @@ Table \ref{tab:1.1-results} reports RMSE, MAE, and the actual run time of global
 \end{table}
 
 \subsubsection{Algorithm Analysis}
-\noindent\textbf{Notations}\\
-As stated in the question,
-\begin{itemize}
-    \item $M$: The number of movies.
-    \item $U$: The number of users.
-    \item $R$: The number of ratings.
-\end{itemize}
-
-\vspace{0.3cm}
 \noindent\textbf{Time Complexity}\\
-The code in the \texttt{for} loop is executed n times. Therefore, its run time is proportional to $n$, which means its time complexity is $O(n)$.
-We need to fill a $M \times U$ matrix with the generated ratings, which is a matrix with movies and users.
-To solve this, we need a $O(MU)$ time complexity.
- Calculating RMSE and MAE also has time complexity $O(MU)$. Therefore, the time complexity of our implementation is $O(MU)$.\par
+In the model construction stage, computing the global average rating has the $O(R)$ time complexity, since the number of addition operations is $R - 1$ and the number of division operation is $1$. In the worst case, a movie is rated by $U$ users. Therefore, the time complexity of calculating the average movie rating is $O(MU)$. Similarly, calculating the average user rating has the $O(MU)$ time complexity. Linear regression can be written in the matrix form as follows.
+$$
+Y = X\beta
+$$
+where $X$ is an $I\times J$ matrix. Then, the result of linear regression is,
+$$
+\hat{\beta} = \left[ X^TX \right]^{-1} X^TY
+$$
+The time complexity of estimating $\beta$ is $O(I\times J^2 + J^3)$. $I$ equals to $R$ in Task 1.1. $J$ is $3$ if linear regression is with intercept term, and is $2$ if without intercept term. Thus, the time complexity of linear regression algorithm is $O(MU) + O(MU) + O(c^2R + c^3)\rightarrow O(MU + R)$, where $c$ is a constant. In all five models, evaluating RMSE and MAE has the time complexity of $O(R)$. The following summarizes the time complexity of five models.
+\begin{itemize}
+    \item Global average rating: $O(R)$.
+    \item Average movie rating: $O(MU + R)$.
+    \item Average user rating: $O(MU + R)$.
+    \item Linear regression (with and without intercept): $O(MU + R)$.
+\end{itemize}
+\par
+However, the number of ratings that a movie actually received is much smaller than the theoratical boundary $O(MU)$ in data set. So is the number of ratings that a user gave to movies. It explains that the real run time of these algorithms is short in our experiments. \par
 \vspace{0.3cm}
 \noindent\textbf{Memory Complexity}\\
-In the \texttt{for} loop, storing error value and the RMSE and AME needs $O(1)$ memory. During the $global\_average$,$user\_average$, $movie\_average$, $linear\ regression\ with\ and\ without\ intercept$, the memory complexity of our implementation is $O(MU)$.
+Storing all ratings needs $O(R)$ memory. When calculating the global average rating, we only need to maintain one number that is the average value. It means that calculating the global average rating has $O(R) + O(1)\rightarrow O(R)$ memory complexity. As for computing the average movie rating, we firstly needs to maintain an $M\times 1$ array. Then, we calculate the mean value of the array. Therefore, the memory complexity of computing the average movie rating is $O(R + M + 1) \rightarrow O(R + M)$. We can analyze the process of computing the average user rating similarly and obtain $O(R + U)$ complexity.
+When adopting linear regression models, we needs an additional $O(1)$ memory to store $\beta$. Besides, calculating RMSE and MAE requires $O(R)$ memory in all five models. The memory complexity of five models is listed as follows.
+\begin{itemize}
+    \item Global average rating: $O(R)$.
+    \item Average movie rating: $O(R + M)$.
+    \item Average user rating: $O(R + U)$.
+    \item Linear regression (with and without intercept): $O(M+U+R)$.
+\end{itemize}
 
 \subsection{UV Matrix Decomposition}
 \subsubsection{Experimental Set-up}
@@ -166,15 +185,6 @@ Table \ref{tab:1.2-re} reports the results of the task.
 \end{table}
 
 \subsubsection{Algorithm Analysis}
-\noindent\textbf{Notations}\\
-As stated in the question,
-\begin{itemize}
-    \item $M$: The number of movies.
-    \item $U$: The number of users.
-    \item $R$: The number of ratings.
-\end{itemize}
-The number of features $K$ is an integer specified by user. We regard $K$ as a constant in the following analysis.\par
-\vspace{0.3cm}
 \noindent\textbf{Time Complexity}\\
 Computing the sum $\sum_{k}$ needs time $O(K)$, and $\sum_j$ needs $O(M)$. Thus, a single update of an element of $U$ costs $O(MK)$. Similarly, updating an element of $V$ needs $O(UK)$. Since there are $UK$ and $KM$ elements in $U$ and $V$ respectively, an epoch which updates all the elements of $U$ and $V$ has a time complexity of $O(UK\cdot MK+KM\cdot UK)=O(MUK^2)\rightarrow O(MU)$. This is a very costly and slow algorithm, which explains the long running time in the experiment result. In fact, we have tried to set the dimension $K$ to larger numbers, like 10, and it took many hours to run a single experiment, which became unacceptable.
 
@@ -241,15 +251,6 @@ Table \ref{tab:1.3-results} reports RMSE, MAE, and the actual run time of matrix
 According to Table \ref{tab:1.3-results}, the suggested setting is not the optimal choice.
 
 \subsubsection{Algorithm Analysis}
-\noindent\textbf{Notations}\\
-As stated in the question,
-\begin{itemize}
-    \item $M$: The number of movies.
-    \item $U$: The number of users.
-    \item $R$: The number of ratings.
-\end{itemize}
-The number of features $K$ is an integer specified by user. We regard $K$ as a constant in the following analysis.\par
-\vspace{0.3cm}
 \noindent\textbf{Time Complexity}\\
 The time complexity of initializing $U$ and $M$ depends on the implementation of random number generation algorithm. For simplicity, we assume the time complexity of the initialization stage is $O(1)$. According to our Python implementation, the \texttt{for} loop to update weights has the time complexity $O(R)$. In the \texttt{for} loop, calculating error, computing gradients, and updating weights all have the time complexity $O(K) \rightarrow O(1)$. To evaluate the performance, we need to traverse the rating table, which leads to $O(R)$ time complexity. Calculating RMSE and MAE also has time complexity $O(R)$. Therefore, the time complexity of our implementation is $O(R)$.\par 
 \vspace{0.3cm}
