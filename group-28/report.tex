@@ -106,7 +106,7 @@ Table \ref{tab:1.1-results} reports RMSE, MAE, and the actual run time of global
 
 \subsubsection{Algorithm Analysis}
 \noindent\textbf{Time Complexity}\\
-In the model construction stage, computing the global average rating has the $O(R)$ time complexity, since the number of addition operations is $R - 1$ and the number of division operation is $1$. In the worst case, a movie is rated by $U$ users. Therefore, the time complexity of calculating the average movie rating is $O(MU)$. Similarly, calculating the average user rating has the $O(MU)$ time complexity. Linear regression can be written in the matrix form as follows.
+In the model construction stage, computing the global average rating has the $O(R)$ time complexity, since the number of addition operations is $R - 1$ and the number of division operation is $1$. When calculating the average movie rating, we need  $O(R)$ addition operations and $O(M)$ division operations for all movies. Therefore, the time complexity of calculating the average movie rating is $O(M + R)$. Similarly, calculating the average user rating has the $O(U + R)$ time complexity. Linear regression can be written in the matrix form as follows.
 $$
 Y = X\beta
 $$
@@ -114,24 +114,23 @@ where $X$ is an $I\times J$ matrix. Then, the result of linear regression is,
 $$
 \hat{\beta} = \left[ X^TX \right]^{-1} X^TY
 $$
-The time complexity of estimating $\beta$ is $O(I\times J^2 + J^3)$. $I$ equals to $R$ in Task 1.1. $J$ is $3$ if linear regression is with intercept term, and is $2$ if without intercept term. Thus, the time complexity of linear regression algorithm is $O(MU) + O(MU) + O(c^2R + c^3)\rightarrow O(MU + R)$, where $c$ is a constant. In all five models, evaluating RMSE and MAE has the time complexity of $O(R)$. The following summarizes the time complexity of five models.
+The time complexity of estimating $\beta$ is $O(I\times J^2 + J^3)$. $I$ equals to $R$ in Task 1.1. $J$ is $3$ if linear regression is with intercept term, and is $2$ if without intercept term. Thus, the time complexity of linear regression algorithm is $O(U + R) + O(M + R) + O(c^2R + c^3)\rightarrow O(U + M + R)$, where $c$ is a constant. In all five models, evaluating RMSE and MAE has the time complexity of $O(R)$. The following summarizes the time complexity of five models.
 \begin{itemize}
     \item Global average rating: $O(R)$.
-    \item Average movie rating: $O(MU + R)$.
-    \item Average user rating: $O(MU + R)$.
-    \item Linear regression (with and without intercept): $O(MU + R)$.
+    \item Average movie rating: $O(M + R)$.
+    \item Average user rating: $O(U + R)$.
+    \item Linear regression (with and without intercept): $O(U + M + R)$.
 \end{itemize}
 \par
-However, the number of ratings that a movie actually received is much smaller than the theoratical boundary $O(MU)$ in data set. So is the number of ratings that a user gave to movies. It explains that the real run time of these algorithms is short in our experiments. \par
 \vspace{0.3cm}
 \noindent\textbf{Memory Complexity}\\
 Storing all ratings needs $O(R)$ memory. When calculating the global average rating, we only need to maintain one number that is the average value. It means that calculating the global average rating has $O(R) + O(1)\rightarrow O(R)$ memory complexity. As for computing the average movie rating, we firstly needs to maintain an $M\times 1$ array. Then, we calculate the mean value of the array. Therefore, the memory complexity of computing the average movie rating is $O(R + M + 1) \rightarrow O(R + M)$. We can analyze the process of computing the average user rating similarly and obtain $O(R + U)$ complexity.
 When adopting linear regression models, we needs an additional $O(1)$ memory to store $\beta$. Besides, calculating RMSE and MAE requires $O(R)$ memory in all five models. The memory complexity of five models is listed as follows.
 \begin{itemize}
     \item Global average rating: $O(R)$.
-    \item Average movie rating: $O(R + M)$.
-    \item Average user rating: $O(R + U)$.
-    \item Linear regression (with and without intercept): $O(M+U+R)$.
+    \item Average movie rating: $O(M + R)$.
+    \item Average user rating: $O(U + R)$.
+    \item Linear regression (with and without intercept): $O(U + M + R)$.
 \end{itemize}
 
 \subsection{UV Matrix Decomposition}
